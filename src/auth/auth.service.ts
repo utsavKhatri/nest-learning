@@ -1,13 +1,12 @@
+import { AuthDto } from './dto/auth.dto';
+import { PrismaService } from '../prisma/prisma.service';
 import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { AuthDto } from './dto';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
-import { config } from 'process';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -65,7 +64,7 @@ export class AuthService {
   }
   async signToken(userId: string, email: string): Promise<string> {
     const payload = {
-      sub: userId,
+      id: userId,
       email: email,
     };
     return this.jwt.signAsync(payload, {
