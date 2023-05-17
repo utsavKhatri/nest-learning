@@ -1,4 +1,3 @@
-import { EditBookmarkDto } from './../src/bookmark/dto/editBookmark.dto';
 import { CreateBookmarkDto } from './../src/bookmark/dto/createBookmark.dto';
 import { EditUserDto } from './../src/user/dto/edit-user.dto';
 import { AuthDto } from './../src/auth/dto/auth.dto';
