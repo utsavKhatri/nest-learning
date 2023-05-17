@@ -36,6 +36,7 @@ describe('AppController (e2e)', () => {
       email: 'test123@test.com',
       password: '1234',
     };
+
     describe('Signup', () => {
       it('should signup', () => {
         return pactum
@@ -45,6 +46,7 @@ describe('AppController (e2e)', () => {
           .expectStatus(201);
       });
     });
+
     describe('Signin', () => {
       it('should signin', () => {
         return pactum
@@ -56,6 +58,7 @@ describe('AppController (e2e)', () => {
       });
     });
   });
+
   describe('User', () => {
     describe('Get me', () => {
       it('should get current user', () => {
@@ -68,6 +71,7 @@ describe('AppController (e2e)', () => {
           .expectStatus(200);
       });
     });
+
     describe('edit me', () => {
       it('should edit current user', () => {
         const dto: EditUserDto = {
@@ -86,6 +90,7 @@ describe('AppController (e2e)', () => {
       });
     });
   });
+
   describe('Bookmark', () => {
     describe('Get empty bookmarks', () => {
       it('should get bookmarks', () => {
@@ -99,6 +104,7 @@ describe('AppController (e2e)', () => {
           .expectBody([]);
       });
     });
+
     describe('Get all bookmarks', () => {
       it('should get bookmarks', () => {
         return pactum
@@ -129,6 +135,7 @@ describe('AppController (e2e)', () => {
           .stores('bookmarkedId', 'id');
       });
     });
+
     describe('Get one bookmark', () => {
       it('should get one bookmark', () => {
         return pactum

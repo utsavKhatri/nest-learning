@@ -8,6 +8,7 @@ import {
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +17,16 @@ export class AuthService {
     private prisma: PrismaService,
     private jwt: JwtService,
   ) {}
-  async signup(body: AuthDto) {
+
+  /**
+   * Asynchronously signs up a new user with the provided credentials.
+   *
+   * @param {AuthDto} body - An object containing the user's email and password.
+   * @return {Promise<User>} A Promise that resolves to the newly created user.
+   * @throws {BadRequestException} If the provided email is already in use.
+   * @throws {InternalServerErrorException} If there was an error creating the user.
+   */
+  async signup(body: AuthDto): Promise<User> {
     try {
       const hashedPassword = await argon.hash(body.password);
       const user = await this.prisma.user.create({
@@ -35,7 +45,14 @@ export class AuthService {
     }
   }
 
-  async signin(body: AuthDto) {
+  /**
+   * Asynchronously signs in a user given their AuthDto.
+   *
+   * @param {AuthDto} body - The DTO containing email and password.
+   * @return {Promise<{token: string, user: object}>} The token and user object upon successful authentication.
+   * @throws {BadRequestException} Email or password is incorrect or password is incorrect.
+   */
+  async signin(body: AuthDto): Promise<{ token: string; user: object }> {
     try {
       const isExits = await this.prisma.user.findUnique({
         where: {
@@ -62,6 +79,14 @@ export class AuthService {
       return error.response;
     }
   }
+
+  /**
+   * Asynchronously signs a JSON Web Token (JWT) using the provided user ID and email.
+   *
+   * @param {string} userId - The ID of the user to be included in the JWT payload.
+   * @param {string} email - The email of the user to be included in the JWT payload.
+   * @return {Promise<string>} A Promise that resolves with a signed JWT string.
+   */
   async signToken(userId: string, email: string): Promise<string> {
     const payload = {
       id: userId,
