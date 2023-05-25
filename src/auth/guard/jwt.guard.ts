@@ -5,3 +5,9 @@ export class Jwtguard extends AuthGuard('jwt') {
     super();
   }
 }
+
+export class AdminJwt extends AuthGuard('adminJwt') {
+  constructor() {
+    super();
+  }
+}

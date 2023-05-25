@@ -9,6 +9,7 @@ import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
+import { ExternalExceptionFilter } from '@nestjs/core/exceptions/external-exception-filter';
 
 @Injectable()
 export class AuthService {
@@ -21,21 +22,20 @@ export class AuthService {
   /**
    * Asynchronously signs up a new user with the provided credentials.
    *
-   * @param {AuthDto} body - An object containing the user's email and password.
-   * @return {Promise<User>} A Promise that resolves to the newly created user.
-   * @throws {BadRequestException} If the provided email is already in use.
-   * @throws {InternalServerErrorException} If there was an error creating the user.
+   * @param   {AuthDto} body                              - An object containing the user's email and password.
+   * @return  {Promise<User>}                             - A Promise that resolves to the newly created user.
+   * @throws  {BadRequestException}                       - If the provided email is already in use.
+   * @throws  {InternalServerErrorException}              - If there was an error creating the user.
    */
   async signup(body: AuthDto): Promise<User> {
     try {
       const hashedPassword = await argon.hash(body.password);
+      body.password = hashedPassword;
       const user = await this.prisma.user.create({
-        data: {
-          email: body.email,
-          password: hashedPassword,
-        },
+        data: body,
       });
       delete user.password;
+      delete user.isAdmin;
       return user;
     } catch (error) {
       if (error.code === 'P2002') {
@@ -48,44 +48,42 @@ export class AuthService {
   /**
    * Asynchronously signs in a user given their AuthDto.
    *
-   * @param {AuthDto} body - The DTO containing email and password.
-   * @return {Promise<{token: string, user: object}>} The token and user object upon successful authentication.
-   * @throws {BadRequestException} Email or password is incorrect or password is incorrect.
+   * @param   {AuthDto} body                              - The DTO containing email and password.
+   * @return  {Promise<{message:string,token: string, user: object}>}    - The token and user object upon successful authentication.
+   * @throws  {BadRequestException}                       - Email or password is incorrect or password is incorrect.
    */
-  async signin(body: AuthDto): Promise<{ token: string; user: object }> {
-    try {
-      const isExits = await this.prisma.user.findUnique({
-        where: {
-          email: body.email,
-        },
-      });
-      if (!isExits) {
-        throw new BadRequestException('Email or password is incorrect');
-      }
-      const passwordMatches = await argon.verify(
-        isExits.password,
-        body.password,
-      );
-      if (!passwordMatches) {
-        throw new BadRequestException('password is incorrect');
-      }
-      const token = await this.signToken(isExits.id, isExits.email);
-      delete isExits.password;
-      return {
-        token,
-        user: isExits,
-      };
-    } catch (error) {
-      return error.response;
+  async signin(
+    body: AuthDto,
+  ): Promise<{ message: string; token: string; user: object }> {
+    const isExits = await this.prisma.user.findUnique({
+      where: {
+        email: body.email,
+      },
+    });
+    if (!isExits) {
+      throw new BadRequestException('Email or password is incorrect');
     }
+    const passwordMatches = await argon.verify(isExits.password, body.password);
+    if (!passwordMatches) {
+      throw new BadRequestException('password is incorrect');
+    }
+    const token = await this.signToken(isExits.id, isExits.email);
+    delete isExits.password;
+    delete isExits.isAdmin;
+
+    return {
+      message: 'login success',
+      token,
+      user: isExits,
+    };
   }
 
   /**
    * Asynchronously signs a JSON Web Token (JWT) using the provided user ID and email.
    *
-   * @param {string} userId - The ID of the user to be included in the JWT payload.
-   * @param {string} email - The email of the user to be included in the JWT payload.
-   * @return {Promise<string>} A Promise that resolves with a signed JWT string.
+   * @param   {string} userId                             - The ID of the user to be included in the JWT payload.
+   * @param   {string} email                              - The email of the user to be included in the JWT payload.
+   * @return  {Promise<string>}                           - A Promise that resolves with a signed JWT string.
    */
   async signToken(userId: string, email: string): Promise<string> {
     const payload = {
