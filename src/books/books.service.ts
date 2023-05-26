@@ -67,6 +67,9 @@ export class BooksService {
       where: {
         id,
       },
+      include: {
+        user: true,
+      },
     });
     if (!book) throw new NotFoundException('Book not found');
     return book;
@@ -95,6 +98,7 @@ export class BooksService {
         ...updateBookDto,
       },
     });
+
     return `updated #${id} book successfully`;
   }
 
@@ -134,6 +138,29 @@ export class BooksService {
         resolve(result);
       });
       toStream(file.buffer).pipe(upload);
+    });
+  }
+  async searchBook(query: string): Promise<Books[]> {
+    return this.prisma.books.findMany({
+      where: {
+        OR: [
+          {
+            title: {
+              contains: query,
+            },
+          },
+          {
+            description: {
+              contains: query,
+            },
+          },
+          {
+            author: {
+              contains: query,
+            },
+          },
+        ],
+      },
     });
   }
 }
