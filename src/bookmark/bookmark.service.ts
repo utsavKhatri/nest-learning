@@ -58,8 +58,11 @@ export class BookmarkService {
         id: bookmarkId,
         userId: id,
       },
-      select: this._QUERY,
+      include: {
+        book: true,
+      },
     });
+
     if (!bookmark)
       throw new NotFoundException('Bookmark not found or you do not own it');
     return bookmark;
@@ -90,7 +93,7 @@ export class BookmarkService {
     if (!bookmark || bookmark.userId !== id)
       throw new ForbiddenException('Access to resources denied');
 
-    const isValidBookId = await this.prisma.books.findUnique({
+    const isValidBookId = await this.prisma.books.findFirst({
       where: {
         id: dto.bookId,
       },
