@@ -34,6 +34,8 @@ describe('AppController (e2e)', () => {
     const dto: AuthDto = {
       email: 'test123@test.com',
       password: '1234',
+      firstName: '',
+      lastName: '',
     };
 
     describe('Signup', () => {
